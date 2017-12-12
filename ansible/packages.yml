@@ -1,0 +1,14 @@
+---
+- name: Install project related packages
+  hosts: all
+  gather_facts: yes
+  become: yes
+
+  tasks:
+    - name: install system packages
+      apt: name={{item}} state=latest install_recommends=no update_cache=yes
+      with_items:
+        - mc
+        - curl
+        - jq
+        - vim-nox

@@ -1,0 +1,10 @@
+---
+
+# Disabled to speed-up tasks.
+# - name: safe packages upgrade
+#   apt: update_cache=yes upgrade=yes
+
+- name: ensure python packages required by ansible are installed
+  apt: name={{item}} state=installed
+  with_items:
+    - python-pycurl

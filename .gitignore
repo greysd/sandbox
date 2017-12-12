@@ -1,0 +1,8 @@
+.vagrant/
+.vscode/
+.DS_Store
+*.pyc
+*.egg-info
+
+apiserver/media/files/private/
+

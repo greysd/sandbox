@@ -1,0 +1,25 @@
+---
+- hosts: all
+  gather_facts: no
+  become_method: sudo
+
+  vars:
+      bootstrap_lock: ~/bootstrapped
+      bootstrap_autorun: True
+
+  tasks:
+    - stat: path={{ bootstrap_lock }}
+      register: already_boostrapped
+      become_user: vagrant
+
+    - command: make bootstrap
+      name: make bootstrap
+      args:
+        chdir: /vagrant/
+      when: bootstrap_autorun and already_boostrapped.stat.exists == False
+      register: bootstrap_done
+      become_user: vagrant
+
+    - file: path={{ bootstrap_lock }} state=touch
+      become_user: vagrant
+      when: bootstrap_done

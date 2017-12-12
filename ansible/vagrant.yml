@@ -1,0 +1,20 @@
+---
+- hosts: all
+  gather_facts: yes
+  become: yes
+  become_method: sudo
+
+  vars:
+    locale: en_US.UTF-8
+    timezone: Europe/Moscow
+    vagrant: True
+
+  roles:
+    - common
+    - locale
+    - timezone
+    - tmux
+
+- include: packages.yml
+- include: python.yml
+- include: bootstrap.yml

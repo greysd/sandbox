@@ -1,0 +1,7 @@
+---
+
+- name: create /etc/locale.gen for {{locale}}
+  template: src=locale.gen dest=/etc/locale.gen
+  notify:
+    - generate locale
+    - update locale

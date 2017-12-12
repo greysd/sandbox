@@ -1,0 +1,22 @@
+---
+
+  - name: ensure tmux is installed
+    apt: name=tmux state=installed install_recommends=no
+
+  - name: get local user home dir
+    local_action: shell echo "$HOME"
+    register: local_home
+    become: no
+
+  - name: check if there is a local tmux config
+    local_action: stat path={{ local_home.stdout }}/.tmux.conf
+    register: tmux_config
+    become: no
+
+  - name: put default .tmux.conf to {{tmux_conf_dir}}
+    template: dest={{tmux_conf_dir}}/.tmux.conf src=tmux.conf
+    when: tmux_config.stat.exists == false
+
+  - name: put user's .tmux.conf to {{tmux_conf_dir}}
+    copy: dest={{tmux_conf_dir}}/.tmux.conf src={{ local_home.stdout }}/.tmux.conf
+    when: tmux_config.stat.exists == true

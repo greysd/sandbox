@@ -1,0 +1,4 @@
+---
+
+- name: set /etc/localtime to {{timezone}}
+  command: timedatectl set-timezone {{timezone}}

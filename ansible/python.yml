@@ -1,0 +1,47 @@
+---
+- name: Install python packages
+  hosts: all
+  gather_facts: no
+  become: yes
+
+
+  tasks:
+    - name: APT packages
+      apt: name={{ item }} state=present install_recommends=no force=yes
+      with_items:
+        - ipython
+        - python-dev
+        - python-ipdb
+        - python-pip
+        - python-setuptools
+        - python-virtualenv
+        - python-dateutil
+        - python-psycopg2
+        - python-lxml
+        - mupdf-tools
+        - build-essential
+        - libssl-dev
+        - libffi-dev
+        - python-ldap
+
+    - name: PIPY packages
+      pip: name={{ item }} state=latest
+      with_items:
+          - virtualenv-tools
+          - tornado
+          - filemagic
+          - atomicfile
+          - bcrypt
+          - formencode
+          - urlfetch
+          - phonenumbers
+          - raven
+          - wtforms
+          - wtforms-json
+          - yandex-pgmigrate
+          - chardet
+          - xlwt
+          - pytz
+          - pyotp
+          - qrcode
+          - pillow

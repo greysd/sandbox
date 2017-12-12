@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+
+{% block body %}
+    <h1>Upload file</h1>
+
+    <p>Standard upload form:</p>
+    <form action="" enctype="multipart/form-data" method="post">
+        {% raw xsrf_form_html() %}
+        <input type="file" name="attach">
+        <input type="submit" value="Upload">
+    </form>
+
+    <footer>
+        <a href="/files">All files</a>
+    </footer>
+{% end %}
