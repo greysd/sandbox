@@ -1,0 +1,40 @@
+---
+- hosts: all
+  gather_facts: no
+  become_method: sudo
+  
+  tasks:
+        
+    - name: remove host to the backend of haproxy.conf
+      become: yes
+      notify:
+        - reload haproxy
+      lineinfile:
+        state: absent
+        line: '         server {{server_name}} localhost:{{ server_port }} weight 100 check'
+        dest: /etc/haproxy/haproxy.cfg
+        
+    - name: remove iptables rule for stop new connections
+      become: yes
+      iptables:
+        chain: INPUT
+        jump: DROP
+        ctstate: NEW
+        protocol: tcp
+        state: absent
+        destination_port: '{{ killed_port }}'
+        
+    - name: kill process
+      become: yes
+      shell: kill -KILL $(netstat -napt 2>&1 | grep {{ server_port }} | tail -1 | awk ' {split($7,a,"/"); print a[1]}')
+    
+    - name: remove directory
+      become: yes
+      command: rm -rf /vagrant/tornado /vagrant/{{ server_name }}
+    
+  handlers:
+    - name: reload haproxy
+      become: yes
+      service:
+        name: haproxy
+        state: reloaded

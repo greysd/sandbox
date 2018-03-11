@@ -1,0 +1,103 @@
+---
+- hosts: all
+  vars:
+    frontend_port: 15000
+    backend_first_port: 5000
+  gather_facts: no
+  become_method: sudo
+  
+  tasks:
+    - name: install haproxy
+      become: yes
+      apt:
+        name: haproxy
+        state: latest
+      tags:
+        - installation
+
+    - name: config file copy
+      become: yes
+      notify: restart haproxy
+      template:
+        src: templates/haproxy.j2
+        dest: /etc/haproxy/haproxy.cfg
+        mode: "u=rw,g=r,o=r"
+      tags:
+        - installation
+        
+    - name: add frontend port to iptables
+      become: yes
+      iptables:
+        chain: INPUT
+        jump: ACCEPT
+        protocol: tcp
+        destination_port: '{{ frontend_port }}'
+        state: present
+      tags:
+        - installation
+        
+    - name: copy directories
+      command: cp -r /vagrant/tornado /vagrant/{{ server_name }}
+      args:
+        creates: /vagrant/{{ server_name }}/settings.py
+      tags:
+        - newserver
+        - installation
+      
+    - name: start server
+      shell: 'PYTHONDONTWRITEBYTECODE=1 python -m apiserver.server --logging=debug --port={{ server_port }} &'
+      args:
+        chdir: '/vagrant/{{ server_name }}'
+      tags:
+        - newserver
+        - installation
+      when: server_port is defined
+      
+    - name: start default server
+      shell: 'PYTHONDONTWRITEBYTECODE=1 python -m apiserver.server --logging=debug &'
+      args:
+        chdir: '/vagrant/{{ server_name }}'
+      when: server_port is undefined
+      tags:
+        - installation
+        - newserver
+        
+    - name: add host to the backend of haproxy.conf
+      become: yes
+      notify:
+        - reload haproxy
+      lineinfile:
+        state: present
+        line: '         server {{server_name}} localhost:{{ server_port }} weight 100 check'
+        insertafter: '^\s*server'
+        dest: /etc/haproxy/haproxy.cfg
+      when: server_port is defined
+      tags:
+        - newserver
+        
+        
+    - name: add iptables rule for stop new connections
+      become: yes
+      iptables:
+        chain: INPUT
+        jump: DROP
+        ctstate: NEW
+        protocol: tcp
+        state: present
+        destination_port: '{{ killed_port }}'
+      when: killed_port is defined
+      tags:
+        - newserver
+
+  handlers:
+    - name: reload haproxy
+      become: yes
+      service:
+        name: haproxy
+        state: reloaded
+        
+    - name: restart haproxy`
+      become: yes
+      service:
+        name: haproxy
+        state: restarted
